@@ -174,11 +174,11 @@ void strobe(CRGB color, int interval) {
         isOn = !isOn;                          // Toggle the ON/OFF state
 
         if (isOn) {
-            setLEDs(color); 
+            setLEDs(color);
         } else {
             setLEDs(CRGB(0,0,0));
         }
-        FastLED.show();                        
+        FastLED.show();
     }
 }
 
@@ -244,7 +244,7 @@ void comet(CRGB color) { // https://github.com/davepl/DavesGarageLEDSeries/blob/
 }
 
 void bounce(CRGB color) {
-    
+
 }
 
 void twinkle() {
