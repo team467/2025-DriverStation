@@ -16,136 +16,6 @@ int lastCLK; // Last state of CLK pin
 
 bool manual = true; // Whether or not we are connected to the driverstation
 
-/*                SETUP                */
-void setup() {
-    Serial.begin(9600); // Start serial communication
-    setupEncoderPins(); // Call setting up encoder pins
-    lastCLK = digitalRead(CLK); // Initialize lastCLK state
-
-    FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip); // Setup LEDs on WS2812B strip
-    FastLED.setMaxPowerInVoltsAndMilliamps(5, 2500); // Set power limit of LED strip to 5V, 2500mA
-    FastLED.clear();
-}
-
-/*                LOOP                 */
-void loop() {
-    trackEncoderRotation(); // Track encoder rotation and update encoder position variable
-    switch (manual) {
-        case false: // Connected to driverstation; mirroring robot state
-            if (checkEncoderButton()) {
-                manual = true;
-            }
-            break;
-
-        case true: // Not connected to driverstation, have complete control over LEDs
-            if (checkEncoderButton() && recievingData()) {
-                manual = false;
-            }
-            switch (positionCase) {
-                case 1:
-                    Serial.println("Case 1: Range 0-4, TWINKLE");
-                    COMtwinkle();
-                    break;
-                case 2:
-                    Serial.println("Case 2: Range 4-8, COMET");
-                    comet(CRGB::Blue);
-                    comet(CRGB::Yellow);
-                    break;
-                case 3:
-                    Serial.println("Case 3: Range 8-12, STROBE");
-                    strobe(CRGB::Blue, 50);
-                    strobe(CRGB::Yellow, 50);
-                    break;
-                case 4:
-                    Serial.println("Case 4: Range 12-16, STRIPS");
-                    stripes();
-                    break;
-                case 5:
-                    Serial.println("Case 5: Range 16-20, RAINBOW");
-                    rainbow();
-                    break;
-                default:
-                    Serial.println("Default case: Out of range: RAINBOW");
-                    rainbow();
-                    break;
-            }
-            break;
-    }
-}
-
-/*          HELPER FUNCTIONS          */
-void setupEncoderPins() {
-    pinMode(CLK, INPUT);
-    pinMode(DT, INPUT);
-    pinMode(SW, INPUT_PULLUP); // Enable internal pull-up for switch
-}
-
-bool recievingData() {
-    clearLEDs();
-    if (true) {
-        setLEDs(CRGB(0, 255, 0));
-    } else {
-        setLEDs(CRGB(255, 0, 0));
-    }
-    FastLED.show(); // Show the updated state
-}
-
-/*          ENCODER FUNCTIONS         */
-void trackEncoderRotation() {
-    int currentCLK = digitalRead(CLK); // Read current state of CLK
-
-    // Check if the CLK pin state has changed (rotation detected)
-    if (currentCLK != lastCLK) {
-        // Determine rotation direction based on the state of the DT pin
-        if (digitalRead(DT) != currentCLK) { // Clockwise rotation
-            encoderPosition++;
-            if (encoderPosition > MAX_ENCODER_POSITION) { // Wrap around if exceeding MAX_POSITION
-                encoderPosition = 0;
-            }
-        } else { // Counterclockwise rotation
-            encoderPosition--;
-            if (encoderPosition < 0) { // Wrap around if below 0
-                encoderPosition = MAX_ENCODER_POSITION;
-            }
-        }
-
-        // Print encoder position for debugging
-        Serial.print("Encoder Position: ");
-        Serial.println(encoderPosition);
-    }
-
-    // Update last state of CLK
-    lastCLK = currentCLK;
-
-    // Update the position case based on encoder position
-    if (encoderPosition >= 0 && encoderPosition < 5) {
-        positionCase = 1;
-    } else if (encoderPosition >= 4 && encoderPosition < 8) {
-        positionCase = 2;
-    } else if (encoderPosition >= 8 && encoderPosition < 12) {
-        positionCase = 3;
-    } else if (encoderPosition >= 12 && encoderPosition <= 16) {
-        positionCase = 4;
-    } else if (encoderPosition >= 16 && encoderPosition <= 20) {
-        positionCase = 5;
-    } else {
-        positionCase = 0;
-    }
-}
-
-
-bool checkEncoderButton() {
-    if (digitalRead(SW) == LOW) {
-        return true;
-    }
-    return false;
-}
-
-void resetEncoderPosition() {
-    encoderPosition = 0; // Reset encoder position to 0
-    Serial.println("Encoder position reset to 0");
-}
-
 /*         ENCODER ANIMATIONS         */
 void rainbow() {
     static int hue = 0;
@@ -339,4 +209,134 @@ void stripes() {
     }
 
     FastLED.show(); // Update the LEDs with the new pattern
+}
+
+/*          HELPER FUNCTIONS          */
+void setupEncoderPins() {
+    pinMode(CLK, INPUT);
+    pinMode(DT, INPUT);
+    pinMode(SW, INPUT_PULLUP); // Enable internal pull-up for switch
+}
+
+bool recievingData() {
+    clearLEDs();
+    if (true) {
+        setLEDs(CRGB(0, 255, 0));
+    } else {
+        setLEDs(CRGB(255, 0, 0));
+    }
+    FastLED.show(); // Show the updated state
+}
+
+/*          ENCODER FUNCTIONS         */
+void trackEncoderRotation() {
+    int currentCLK = digitalRead(CLK); // Read current state of CLK
+
+    // Check if the CLK pin state has changed (rotation detected)
+    if (currentCLK != lastCLK) {
+        // Determine rotation direction based on the state of the DT pin
+        if (digitalRead(DT) != currentCLK) { // Clockwise rotation
+            encoderPosition++;
+            if (encoderPosition > MAX_ENCODER_POSITION) { // Wrap around if exceeding MAX_POSITION
+                encoderPosition = 0;
+            }
+        } else { // Counterclockwise rotation
+            encoderPosition--;
+            if (encoderPosition < 0) { // Wrap around if below 0
+                encoderPosition = MAX_ENCODER_POSITION;
+            }
+        }
+
+        // Print encoder position for debugging
+        Serial.print("Encoder Position: ");
+        Serial.println(encoderPosition);
+    }
+
+    // Update last state of CLK
+    lastCLK = currentCLK;
+
+    // Update the position case based on encoder position
+    if (encoderPosition >= 0 && encoderPosition < 5) {
+        positionCase = 1;
+    } else if (encoderPosition >= 4 && encoderPosition < 8) {
+        positionCase = 2;
+    } else if (encoderPosition >= 8 && encoderPosition < 12) {
+        positionCase = 3;
+    } else if (encoderPosition >= 12 && encoderPosition <= 16) {
+        positionCase = 4;
+    } else if (encoderPosition >= 16 && encoderPosition <= 20) {
+        positionCase = 5;
+    } else {
+        positionCase = 0;
+    }
+}
+
+
+bool checkEncoderButton() {
+    if (digitalRead(SW) == LOW) {
+        return true;
+    }
+    return false;
+}
+
+void resetEncoderPosition() {
+    encoderPosition = 0; // Reset encoder position to 0
+    Serial.println("Encoder position reset to 0");
+}
+
+/*                SETUP                */
+void setup() {
+    Serial.begin(9600); // Start serial communication
+    setupEncoderPins(); // Call setting up encoder pins
+    lastCLK = digitalRead(CLK); // Initialize lastCLK state
+
+    FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip); // Setup LEDs on WS2812B strip
+    FastLED.setMaxPowerInVoltsAndMilliamps(5, 2500); // Set power limit of LED strip to 5V, 2500mA
+    FastLED.clear();
+}
+
+/*                LOOP                 */
+void loop() {
+    trackEncoderRotation(); // Track encoder rotation and update encoder position variable
+    switch (manual) {
+        case false: // Connected to driverstation; mirroring robot state
+            if (checkEncoderButton()) {
+                manual = true;
+            }
+            break;
+
+        case true: // Not connected to driverstation, have complete control over LEDs
+            if (checkEncoderButton() && recievingData()) {
+                manual = false;
+            }
+            switch (positionCase) {
+                case 1:
+                    Serial.println("Case 1: Range 0-4, TWINKLE");
+                    COMtwinkle();
+                    break;
+                case 2:
+                    Serial.println("Case 2: Range 4-8, COMET");
+                    comet(CRGB::Blue);
+                    comet(CRGB::Yellow);
+                    break;
+                case 3:
+                    Serial.println("Case 3: Range 8-12, STROBE");
+                    strobe(CRGB::Blue, 50);
+                    strobe(CRGB::Yellow, 50);
+                    break;
+                case 4:
+                    Serial.println("Case 4: Range 12-16, STRIPS");
+                    stripes();
+                    break;
+                case 5:
+                    Serial.println("Case 5: Range 16-20, RAINBOW");
+                    rainbow();
+                    break;
+                default:
+                    Serial.println("Default case: Out of range: RAINBOW");
+                    rainbow();
+                    break;
+            }
+            break;
+    }
 }
