@@ -316,8 +316,7 @@ void loop() {
                     break;
                 case 2:
                     Serial.println("Case 2: Range 4-8, COMET");
-                    comet(CRGB::Blue);
-                    comet(CRGB::Yellow);
+                    comet(CRGB::Red);
                     break;
                 case 3:
                     Serial.println("Case 3: Range 8-12, STROBE");
